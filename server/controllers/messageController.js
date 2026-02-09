@@ -1,29 +1,34 @@
-import Message from "../models/Message";
-import User from "../models/User";
+import Message from "../models/Message.js";
+import User from "../models/User.js";
 import cloudinary from "../lib/cloudinary.js";
 import { io, userSocketMap } from "../server.js";
 
 // get all users except the logged in user
-export const getUserForSidebar = async (requestAnimationFrame, res) => {
+export const getUserForSidebar = async (req, res) => {
   try {
     const userId = req.user._id;
+
     const filteredUsers = await User.find({ _id: { $ne: userId } }).select(
       "-password",
     );
 
     // Count number of messages not seen
     const unseenMessages = {};
+
     const promises = filteredUsers.map(async (user) => {
       const messages = await Message.find({
         senderId: user._id,
         receiverId: userId,
         seen: false,
       });
+
       if (messages.length > 0) {
         unseenMessages[user._id] = messages.length;
       }
     });
-    await promises.all(promises);
+
+    await Promise.all(promises);
+
     res.json({ success: true, users: filteredUsers, unseenMessages });
   } catch (error) {
     console.log(error.message);
@@ -36,16 +41,19 @@ export const getMessages = async (req, res) => {
   try {
     const { id: selectedUserId } = req.params;
     const myId = req.user._id;
+
     const messages = await Message.find({
       $or: [
         { senderId: myId, receiverId: selectedUserId },
         { senderId: selectedUserId, receiverId: myId },
       ],
     });
+
     await Message.updateMany(
       { senderId: selectedUserId, receiverId: myId },
       { seen: true },
     );
+
     res.json({ success: true, messages });
   } catch (error) {
     console.log(error.message);
@@ -77,12 +85,14 @@ export const sendMessage = async (req, res) => {
       const uploadResponse = await cloudinary.uploader.upload(image);
       imageUrl = uploadResponse.secure_url;
     }
+
     const newMessage = await Message.create({
       senderId,
       receiverId,
       text,
       image: imageUrl,
     });
+
     // emit the new message to the receiver's socket
     const receiverSocketId = userSocketMap[receiverId];
     if (receiverSocketId) {

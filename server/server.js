@@ -11,6 +11,14 @@ import { Server } from "socket.io";
 const app = express();
 const server = http.createServer(app);
 
+// Enable CORS for both express and socket.io
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  }),
+);
+
 // initialize socket.io server
 export const io = new Server(server, {
   cors: { origin: "*" },

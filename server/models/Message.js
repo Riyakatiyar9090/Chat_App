@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
 import { type } from "os";
+
+import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
   {
@@ -13,12 +14,22 @@ const messageSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    text: { type: String },
-    image: { type: String },
-    seen: { type: Boolean, default: false },
+    text: {
+      type: String,
+    },
+    image: {
+      type: String,
+    },
+    seen: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true },
 );
 
-const User = mongoose.model("Message", messageSchema);
+// ✅ DEFINE THE MODEL
+const Message = mongoose.model("Message", messageSchema);
+
+// ✅ EXPORT IT
 export default Message;
